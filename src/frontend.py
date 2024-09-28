@@ -1,7 +1,7 @@
 import streamlit as st
 import time
-from math_to_solution import math_to_solution
-from translate_to_math import translate_to_math
+from math_to_solution import math_to_code, text_to_math
+
 
 def process_task(task_description):
     # Simulating work
@@ -19,8 +19,8 @@ if st.button("Process Task"):
         # Step 1: Formalizing problem
         st.subheader("Step 1: Formalizing problem")
         with st.spinner("Working on formalizing the problem..."):
-            time.sleep(2)  # Simulating work
-            translated_task_description = translate_to_math(task_description)
+            translated_task_description = text_to_math(task_description)
+
         st.success("Problem formalized!")
         with st.expander("View formalized problem", expanded=False):
             st.write(f"Formalized problem: {translated_task_description}")
@@ -29,7 +29,7 @@ if st.button("Process Task"):
         st.subheader("Step 2: Transforming problem into code")
         with st.spinner("Working on transforming the problem into code..."):
             time.sleep(2)  # Simulating work
-            solution = math_to_solution(translated_task_description)
+            solution = math_to_code(translated_task_description)
         st.success("Problem transformed into code!")
         with st.expander("View generated code", expanded=False):
             st.code(solution, language="python")

@@ -1,17 +1,42 @@
-# from ai21 import AI21Client
+import time
 
-# messages = [ChatMessage(content="Who was the first emperor of rome", role="user")]
+from ai21 import AI21Client
+from ai21.models.chat import ChatMessage
 
-# client = AI21Client()
+model = "jamba-1.5-mini"
 
-# response = client.chat.completions.create(
-#   messages=messages,
-#   model="jamba-1.5-mini",
-#   stream=True
-# )
+client = AI21Client(
+    api_key="6tHa1Ly9bLfewfSO3gqnYRBQ15FFBhhl",
+)
 
-# for chunk in response:
-#   print(chunk.choices[0].delta.content, end="")
 
-def math_to_solution(input):
-    return input
+def text_to_math(task_description: str):
+    messages_step1 = [
+        ChatMessage(content="You're a designed to resolve scheduling problems", role="system"),
+        ChatMessage(content=task_description, role="user"),
+    ]
+    chat_completions = client.chat.completions.create(
+                messages=messages_step1,
+                model=model,
+            )
+
+    return chat_completions.choices[0].message.content
+
+def math_to_code(math_input: str):
+    messages_step2 = [
+            ChatMessage(content="You are professional softeare engineer", role="system"),
+            ChatMessage(content="transform this solution into python executable code", role="user"),
+            ChatMessage(content=math_input, role="user"),
+    ]
+    chat_completions = client.chat.completions.create(
+                messages=messages_step2,
+                model=model,
+            )
+    return chat_completions.choices[0].message.content
+    
+
+
+def process_task(task_description):
+    # Simulating work
+    time.sleep(2)
+    return f"Task '{task_description}' has been processed successfully!"
