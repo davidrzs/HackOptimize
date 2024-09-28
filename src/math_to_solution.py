@@ -53,8 +53,8 @@ def text_to_math(task_description: str):
 
 def math_to_code(math_input: str):
     messages_step2 = [
-            ChatMessage(content="You are professional softeare engineer", role="system"),
-            ChatMessage(content="transform this solution into python executable code", role="user"),
+            ChatMessage(content="You are professional mathematical modeler", role="system"),
+            ChatMessage(content="transform this solution into pyomo model that can be solved with gurobi.", role="user"),
             ChatMessage(content=math_input, role="user"),
     ]
     chat_completions = client.chat.completions.create(
