@@ -1,6 +1,7 @@
 import streamlit as st
 import time
 from math_to_solution import math_to_code, text_to_math
+from code_executioner import execute_python_code
 
 
 def process_task(task_description):
@@ -37,10 +38,12 @@ if st.button("Process Task"):
         # Step 3: Running code
         st.subheader("Step 3: Running code")
         with st.spinner("Running code..."):
-            result = process_task(task_description)
+            result = execute_python_code(solution)
         st.success("Code execution completed!")
+
         with st.expander("View execution details", expanded=False):
             st.write("Execution log: Code ran successfully without any errors.")
+            st.write(result)
         
         # Display the final result
         st.subheader("Task Result")
