@@ -3,7 +3,7 @@ import time
 from ai21 import AI21Client
 from ai21.models.chat import ChatMessage
 
-model = "jamba-1.5-mini"
+model = "jamba-1.5-large"
 
 client = AI21Client(
     api_key="6tHa1Ly9bLfewfSO3gqnYRBQ15FFBhhl",
