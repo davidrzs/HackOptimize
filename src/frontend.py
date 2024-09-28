@@ -29,7 +29,6 @@ if st.button("Process Task"):
         # Step 2: Transforming problem into code
         st.subheader("Step 2: Transforming problem into code")
         with st.spinner("Working on transforming the problem into code..."):
-            time.sleep(2)  # Simulating work
             solution = math_to_code(translated_task_description)
         st.success("Problem transformed into code!")
         with st.expander("View generated code", expanded=False):
@@ -42,7 +41,6 @@ if st.button("Process Task"):
         st.success("Code execution completed!")
 
         with st.expander("View execution details", expanded=False):
-            st.write("Execution log: Code ran successfully without any errors.")
             st.write(result)
         
         # Display the final result

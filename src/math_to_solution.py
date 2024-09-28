@@ -54,123 +54,62 @@ def text_to_math(task_description: str):
 def math_to_code(math_input: str):
     messages_step2 = [
             ChatMessage(content="""
-                        You are professional mathematical modeler that's expert in pyomo and gurobi. 
-                        Here is an example of a pyomo model and solving it with gurobi:
-                        import matplotlib.pyplot as plt
-                        from IPython.display import display
-                        import pandas as pd
-
-                        import shutil
-                        import sys
-                        import os.path
-
-                        # test for pyomo and install if necessary
-                        if not shutil.which("pyomo"):
-                            !pip install -q pyomo
-                            assert(shutil.which("pyomo"))
-
-                        # test for cbc and install if necessary
-                        if not (shutil.which("cbc") or os.path.isfile("cbc")):
-                            if "google.colab" in sys.modules:
-                                !apt-get install -y -qq coinor-cbc
-                            else:
-                                try:
-                                    !conda install -c conda-forge coincbc 
-                                except:
-                                    pass
-                                
-                        assert(shutil.which("cbc") or os.path.isfile("cbc"))
+                        You are professional mathematical modeler that's expert in pyomo. 
+                        Here is an example of a pyomo model:
 
                         from pyomo.environ import *
-                        from pyomo.gdp import *
 
-                        JOBS = {
-                            'A': {'release': 2, 'duration': 5, 'due': 10},
-                            'B': {'release': 5, 'duration': 6, 'due': 21},
-                            'C': {'release': 4, 'duration': 8, 'due': 15},
-                            'D': {'release': 0, 'duration': 4, 'due': 10},
-                            'E': {'release': 0, 'duration': 2, 'due':  5},
-                            'F': {'release': 8, 'duration': 3, 'due': 15},
-                            'G': {'release': 9, 'duration': 2, 'due': 22},
-                        }
+                        # Create a simple model
+                        model = ConcreteModel()
 
-                        def schedule(JOBS, order=sorted(JOBS.keys())):
-                            start = 0
-                            finish = 0
-                            SCHEDULE = {}
-                            for job in order:
-                                start = max(JOBS[job]['release'], finish)
-                                finish = start + JOBS[job]['duration']
-                                SCHEDULE[job] = {'start': start, 'finish': finish}
-                            return SCHEDULE
-                        
-                        SCHEDULE = schedule(JOBS)
-                        
-                        def kpi(JOBS, SCHEDULE):
-                            KPI = {}
-                            KPI['Makespan'] = max(SCHEDULE[job]['finish'] for job in SCHEDULE)
-                            KPI['Max Pastdue'] = max(max(0, SCHEDULE[job]['finish'] - JOBS[job]['due']) for job in SCHEDULE)
-                            KPI['Sum of Pastdue'] = sum(max(0, SCHEDULE[job]['finish'] - JOBS[job]['due']) for job in SCHEDULE)
-                            KPI['Number Pastdue'] = sum(SCHEDULE[job]['finish'] > JOBS[job]['due'] for job in SCHEDULE)
-                            KPI['Number on Time'] = sum(SCHEDULE[job]['finish'] <= JOBS[job]['due'] for job in SCHEDULE)
-                            KPI['Fraction on Time'] = KPI['Number on Time']/len(SCHEDULE)
-                            return KPI
-                        
-                        kpi(JOBS, SCHEDULE)
+                        # Define sets for the time periods (3 hours)
+                        model.T = RangeSet(1, 3)
 
-                        order = sorted(JOBS, reverse=True)
-                        gantt(JOBS, schedule(JOBS,order))
-                        kpi(JOBS, schedule(JOBS,order))
+                        # Define decision variables for whether the chef and cashier are working in each time period
+                        model.chef_work = Var(model.T, domain=Binary)
+                        model.cashier_work = Var(model.T, domain=Binary)
 
-                        def opt_schedule(JOBS):
+                        # Define parameters for the maximum hours chef and cashier can work
+                        max_hours_chef = 2
+                        max_hours_cashier = 3
 
-                            # create model
-                            m = ConcreteModel()
+                        # Objective: Maximize the number of hours the pizzeria is open
+                        # The pizzeria is open if both the chef and cashier are working in a given time period
+                        def total_hours_open(model):
+                            return sum(model.chef_work[t] * model.cashier_work[t] for t in model.T)
 
-                            # index set to simplify notation
-                            m.J = Set(initialize=JOBS.keys())
-                            m.PAIRS = Set(initialize = m.J * m.J, dimen=2, filter=lambda m, j, k : j < k)
+                        model.obj = Objective(rule=total_hours_open, sense=maximize)
 
-                            # upper bounds on how long it would take to process all jobs
-                            tmax = max([JOBS[j]['release'] for j in m.J]) + sum([JOBS[j]['duration'] for j in m.J])
+                        # Constraints
 
-                            # decision variables
-                            m.start      = Var(m.J, domain=NonNegativeReals, bounds=(0, tmax))
-                            m.pastdue    = Var(m.J, domain=NonNegativeReals, bounds=(0, tmax))
-                            m.early      = Var(m.J, domain=NonNegativeReals, bounds=(0, tmax))
+                        # Chef can only work for a maximum of 2 hours
+                        def chef_work_limit(model):
+                            return sum(model.chef_work[t] for t in model.T) <= max_hours_chef
 
-                            # additional decision variables for use in the objecive
-                            m.makespan   = Var(domain=NonNegativeReals, bounds=(0, tmax))
-                            m.maxpastdue = Var(domain=NonNegativeReals, bounds=(0, tmax))
-                            m.ispastdue  = Var(m.J, domain=Binary)
+                        model.chef_work_limit = Constraint(rule=chef_work_limit)
 
-                            # objective function
-                            m.OBJ = Objective(expr = sum([m.pastdue[j] for j in m.J]), sense = minimize)
+                        # Cashier can work for a maximum of 3 hours
+                        def cashier_work_limit(model):
+                            return sum(model.cashier_work[t] for t in model.T) <= max_hours_cashier
 
-                            # constraints
-                            m.c1 = Constraint(m.J, rule=lambda m, j: m.start[j] >= JOBS[j]['release'])
-                            m.c2 = Constraint(m.J, rule=lambda m, j: 
-                                    m.start[j] + JOBS[j]['duration'] + m.early[j] == JOBS[j]['due'] + m.pastdue[j])
-                            m.c3 = Disjunction(m.PAIRS, rule=lambda m, j, k:
-                                [m.start[j] + JOBS[j]['duration'] <= m.start[k], 
-                                 m.start[k] + JOBS[k]['duration'] <= m.start[j]])    
+                        model.cashier_work_limit = Constraint(rule=cashier_work_limit)
 
-                            m.c4 = Constraint(m.J, rule=lambda m, j: m.pastdue[j] <= m.maxpastdue)
-                            m.c5 = Constraint(m.J, rule=lambda m, j: m.start[j] + JOBS[j]['duration'] <= m.makespan)
-                            m.c6 = Constraint(m.J, rule=lambda m, j: m.pastdue[j] <= tmax*m.ispastdue[j])
+                        # Both chef and cashier must work during the same hours (this is implicit in the objective but let's add a constraint for clarity)
+                        def both_working_together(model, t):
+                            return model.chef_work[t] == model.cashier_work[t]
 
-                            TransformationFactory('gdp.chull').apply_to(m)
-                            SolverFactory('gurobi').solve(m).write()
+                        model.work_together = Constraint(model.T, rule=both_working_together)
 
-                            SCHEDULE = {}
-                            for j in m.J:
-                                SCHEDULE[j] = {'machine': 1, 'start': m.start[j](), 'finish': m.start[j]() + JOBS[j]['duration']}
+                        # Solve the model
+                        solver = SolverFactory('glpk')
+                        results = solver.solve(model)
 
-                            return SCHEDULE
-
-                        SCHEDULE = opt_schedule(JOBS)
-                        gantt(JOBS, SCHEDULE)
-                        kpi(JOBS, SCHEDULE)
+                        # Print the results
+                        print("Pizzeria Schedule:")
+                        for t in model.T:
+                            print(f"Hour {t}: Chef working = {int(model.chef_work[t]())}, Cashier working = {int(model.cashier_work[t]())}")
+                            
+                        print(f"Total hours pizzeria is open: {int(sum(model.chef_work[t]() * model.cashier_work[t]() for t in model.T))}")
                         """, 
                         role="system"),
             ChatMessage(content="transform this solution into pyomo model that can be solved with gurobi.", role="user"),

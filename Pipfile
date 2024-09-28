@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 streamlit = "*"
 ai21 = "*"
+gurobipy = "*"
+openai = "*"
 
 [dev-packages]
 

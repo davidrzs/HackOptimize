@@ -5,8 +5,13 @@ from ai21.models.chat.function_tool_definition import FunctionToolDefinition
 from ai21.models.chat.tool_defintions import ToolDefinition
 from ai21.models.chat.tool_parameters import ToolParameters
 import json, requests
+from openai import OpenAI
 
 client = AI21Client(api_key='kXftEvJYqotOSkpTw1e2KNUhvYX0EvU1')
+
+model = "jamba-1.5-large"
+
+
 
 def translate_to_math(input):
 
@@ -21,7 +26,6 @@ def translate_to_math(input):
                             2. Minimize resource consumed
                             3. Minimize downtime between jobs
                             4. Maximize an output like number of items produced or profit
-
 
                             Decisions variables can for example be:
                             1. Start time for each job, machine pair
@@ -40,11 +44,14 @@ def translate_to_math(input):
                             Objective function: Minimize or Maximize
                             Decision variables: x1, x2, x3, ...
                             Constraints: c1, c2, c3, ...
+
+                            Write all constraints inividually such that it is immediately clear what each constraint is.
+                            Your answer must be self-contained and complete so that someone else can understand it without any additional context.
                             """, role="system")]
     messages.append(ChatMessage(content="This is the problem: " + input, role="user"))
     response = client.chat.completions.create(
       messages=messages,
-      model="jamba-1.5-large",
+      model=model,
       stream=True
     )
     for chunk in response:
