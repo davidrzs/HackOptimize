@@ -21,31 +21,20 @@ def translate_to_math(input):
                             You will be given a problem and you will need to translate it into mathematical notation.
                             Your task is to translate the problem into an optimization problem.
 
-                            The problem should be formulated with one the following objectives:
-                            1. Minimize time from start to finish of all required jobs
-                            2. Minimize resource consumed
-                            3. Minimize downtime between jobs
-                            4. Maximize an output like number of items produced or profit
+                            The problem should be formulated with the following objective:
+                            
+                            Minimize time from start to finish of all required jobs
 
-                            Decisions variables can for example be:
-                            1. Start time for each job, machine pair
-                            2. Makespan completion
-                            3. Number of items produced by each machine
+                            Decisions variables will be:
+                            
+                            Start time for each job, machine pair
 
-                            Constraints can for example be:
-                            1. Each job must be done once
-                            2. Each machine can only do one job at a time
-                            3. Each job must be done in a certain order
-                            4. Each job must be done within a certain time frame
-                            5. Maximum number of jobs that can be done in a day
-                            6. There might be downtime required between jobs
-
-                            The problem should be formulated in the following format, :
-                            Objective function: Minimize or Maximize
-                            Decision variables: x1, x2, x3, ...
-                            Constraints: c1, c2, c3, ...
-
-                            Write all constraints inividually such that it is immediately clear what each constraint is.
+                            Constraints can be:
+                            
+                            Each job must be done once
+                            Each machine can only do one job at a time
+                            Each job must be done within a certain time frame
+                            
                             Your answer must be self-contained and complete so that someone else can understand it without any additional context.
                             """, role="system")]
     messages.append(ChatMessage(content="This is the problem: " + input, role="user"))
